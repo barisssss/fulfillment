@@ -1,14 +1,17 @@
-// See https://github.com/dialogflow/dialogflow-fulfillment-nodejs
-// for Dialogflow fulfillment library docs, samples, and to report issues
 "use strict";
 
 const functions = require("firebase-functions");
+const admin = require("firebase-admin");
 const { WebhookClient } = require("dialogflow-fulfillment");
 const { Card, Suggestion } = require("dialogflow-fulfillment");
 
-process.env.DEBUG = "dialogflow:debug"; // enables lib debugging statements
+const axios = require("axios");
 
-exports.dialogflowFirebaseFulfillment2 = functions.https.onRequest(
+process.env.DEBUG = "dialogflow:debug"; // enables lib debugging statements
+admin.initializeApp(functions.config().firebase);
+axios.defaults.baseURL = `https://5be96b4fb854d1001310915d.mockapi.io/api`;
+
+exports.dialogflowFirebaseFulfillment = functions.https.onRequest(
   (request, response) => {
     const agent = new WebhookClient({ request, response });
     console.log(
@@ -17,21 +20,11 @@ exports.dialogflowFirebaseFulfillment2 = functions.https.onRequest(
     console.log("Dialogflow Request body: " + JSON.stringify(request.body));
 
     function welcome(agent) {
-      // let text = new Text();
-      // text.setText(
-      //   "Willkommen bei cunio! Willst du eine Anfrage oder einen Pinnwandpost erstellen?"
-      // );
-      // text.setSsml(
-
-      // );
-      let conv = agent.conv();
-      conv.ask(`<speak>
-          <emphasis level="moderate">Hey! Willkommen bei cunio!</emphasis> 
-          <break length="600ms" />
-          Willst du eine <sub alias="Anfrarghe">Anfrage</sub>, oder einen <sub alias="Pinnwandpohst">Pinnwandpost</sub>erstellen?
-        </speak>`);
-      agent.add(conv);
-
+      agent.add(
+        `Hey! Willkommen bei cunio!
+        Du kannst entweder Anfragen erstellen, oder dir bestehende Einträge ansehen. 
+        Kann ich dir helfen?`
+      );
       agent.add(
         new Card({
           title: "Willkommen bei cunio!",
@@ -41,73 +34,105 @@ exports.dialogflowFirebaseFulfillment2 = functions.https.onRequest(
         })
       );
 
-      agent.add(
-        new Suggestion({
-          title: "Anfrage erstellen"
-        })
-      );
-      agent.add(
-        new Suggestion({
-          title: "Pinnwandpost erstellen"
-        })
-      );
-
-      // agent.add(
-      //   new Suggestion({
-      //     title: "Meine Anfragen ansehen"
-      //   })
-      // );
-      // agent.add(
-      //   new Suggestion({
-      //     title: "Pinnwandpost erstellen"
-      //   })
-      // );
-      // agent.add(
-      //   new Suggestion({
-      //     title: "Pinnwand ansehen"
-      //   })
-      // );
+      agent.add(new Suggestion("Erstell' eine Anfrage"));
+      agent.add(new Suggestion("Zeig' mir eine Anfrage"));
     }
 
-    function fallback(agent) {
-      agent.add(`Sorry, das habe ich nicht verstanden.`);
+    function createReport(agent) {
+      const type = agent.parameters["report_type"];
+      const loc = agent.parameters["report_location"];
+      const gotType = type.length > 0;
+      const gotLoc = loc.length > 0;
+
+      if (gotType && gotLoc) {
+        return axios
+          .post("/reports", { type: type, location: loc })
+          .then(function(res) {
+            const reportIdContext = {
+              name: "reportidcontext",
+              lifespan: 3,
+              parameters: { reportId: res.data.id }
+            };
+            agent.context.set(reportIdContext);
+            console.log("POSTREPORTRES: ", res);
+            agent.add(
+              `Okay, du hast also ein ${res.data.type} Problem in ${
+                res.data.location
+              }. Möchtest du noch eine Beschreibung zu deiner Anfrage hinzufügen?`
+            );
+            agent.add(new Suggestion("Ja"));
+            agent.add(new Suggestion("Nein"));
+          })
+          .catch(function(err) {
+            console.log("POSTREPORTERR: ", err);
+            agent.add(
+              "Ups, da ist etwas schiefgelaufen. Probiere es am besten gleich nochmal!"
+            );
+          });
+      } else if (gotType && !gotLoc) {
+        agent.add("Wo befindet sich dein Problem?");
+      } else if (gotLoc && !gotType) {
+        agent.add("Was genau ist dein Problem?");
+      } else {
+        agent.add("Was ist dein Problem und wo befindet es sich?");
+      }
     }
 
-    // // Uncomment and edit to make your own intent handler
-    // // uncomment `intentMap.set('your intent name here', yourFunctionHandler);`
-    // // below to get this function to be run when a Dialogflow intent is matched
-    // function yourFunctionHandler(agent) {
-    //   agent.add(`This message is from Dialogflow's Cloud Functions for Firebase editor!`);
-    //   agent.add(new Card({
-    //       title: `Title: this is a card title`,
-    //       imageUrl: 'https://developers.google.com/actions/images/badges/XPM_BADGING_GoogleAssistant_VER.png',
-    //       text: `This is the body text of a card.  You can even use line\n  breaks and emoji! 💁`,
-    //       buttonText: 'This is a button',
-    //       buttonUrl: 'https://assistant.google.com/'
-    //     })
-    //   );
-    //   agent.add(new Suggestion(`Quick Reply`));
-    //   agent.add(new Suggestion(`Suggestion`));
-    //   agent.setContext({ name: 'weather', lifespan: 2, parameters: { city: 'Rome' }});
-    // }
+    function createReportAddDesc(agent) {
+      const reportIdContext = agent.context.get("reportidcontext");
+      const reportId = reportIdContext.parameters.reportId;
+      const desc = agent.query;
+      console.log("report id: ", reportId);
 
-    // // Uncomment and edit to make your own Google Assistant intent handler
-    // // uncomment `intentMap.set('your intent name here', googleAssistantHandler);`
-    // // below to get this function to be run when a Dialogflow intent is matched
-    // function googleAssistantHandler(agent) {
-    //   let conv = agent.conv(); // Get Actions on Google library conv instance
-    //   conv.ask('Hello from the Actions on Google client library!') // Use Actions on Google library
-    //   agent.add(conv); // Add Actions on Google library responses to your agent's response
-    // }
-    // // See https://github.com/dialogflow/dialogflow-fulfillment-nodejs/tree/master/samples/actions-on-google
-    // // for a complete Dialogflow fulfillment library Actions on Google client library v2 integration sample
+      return axios
+        .put(`/reports/${reportId}`, { desc: desc })
+        .then(function(res) {
+          console.log(res);
+          agent.add(
+            new Card({
+              title: `Neue Anfrage: ${res.data.type} - ${res.data.location}`,
+              text: `${res.data.desc}`
+            })
+          );
+          agent.add(
+            `Alles klar, ich erstelle direkt eine Anfrage daraus und informiere deine Ansprechpartner! Bis zum nächsten Mal!`
+          );
+        })
+        .catch(function(err) {
+          console.log("Put Report desc err: ", err);
+          agent.add(
+            `Ups, da ist etwas schiefgelaufen. Kannst du es bitte nocheinmal versuchen?`
+          );
+        });
+    }
+
+    function getLatestReports(agent) {
+      return axios
+        .get(`/reports?page=1&limit=1&sortBy=createdAt&order=desc`)
+        .then(function(res) {
+          console.log(res);
+          let desc = "";
+          res.data[0].desc.startsWith("desc")
+            ? (desc = "keine Beschreibung")
+            : (desc = res.data[0].desc);
+          agent.add("Hier ist die letzte Anfrage:");
+          agent.add(
+            new Card({
+              title: `Anfrage ${res.data[0].id}: ${res.data[0].type} - ${
+                res.data[0].location
+              }`,
+              text: desc
+            })
+          );
+        });
+    }
 
     // Run the proper function handler based on the matched Dialogflow intent name
     let intentMap = new Map();
     intentMap.set("Default Welcome Intent", welcome);
-    intentMap.set("Default Fallback Intent", fallback);
-    // intentMap.set('your intent name here', yourFunctionHandler);
-    // intentMap.set('your intent name here', googleAssistantHandler);
+    intentMap.set("createReport", createReport);
+    intentMap.set("createReportAddDesc", createReportAddDesc);
+    intentMap.set("getLatestReports", getLatestReports);
     agent.handleRequest(intentMap);
   }
 );

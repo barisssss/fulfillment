@@ -1,0 +1,14 @@
+[debug] [2018-11-12T17:39:15.941Z] ----------------------------------------------------------------------
+[debug] [2018-11-12T17:39:15.944Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Baris\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy
+[debug] [2018-11-12T17:39:15.944Z] CLI Version:   6.0.1
+[debug] [2018-11-12T17:39:15.944Z] Platform:      win32
+[debug] [2018-11-12T17:39:15.944Z] Node Version:  v8.11.3
+[debug] [2018-11-12T17:39:15.945Z] Time:          Mon Nov 12 2018 18:39:15 GMT+0100 (Mitteleuropäische Zeit)
+[debug] [2018-11-12T17:39:15.945Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2018-11-12T17:39:15.955Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2018-11-12T17:39:15.956Z] > authorizing via signed-in user
+[debug] [2018-11-12T17:39:15.956Z] [iam] checking project cunio-7411b for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2018-11-12T17:39:15.958Z] >>> HTTP REQUEST POST https://cloudresourcemanager.googleapis.com/v1/projects/cunio-7411b:testIamPermissions  
+
+[debug] [2018-11-12T17:39:16.236Z] <<< HTTP RESPONSE 200
