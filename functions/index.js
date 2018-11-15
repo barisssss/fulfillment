@@ -21,9 +21,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest(
 
     function welcome(agent) {
       agent.add(
-        `Hey! Willkommen bei cunio!
-        Du kannst entweder Anfragen erstellen, oder dir bestehende Einträge ansehen. 
-        Kann ich dir helfen?`
+        `Hey! Willkommen bei cunio! Du kannst entweder Anfragen erstellen, oder dir bestehende Einträge ansehen. Kann ich dir helfen?`
       );
       agent.add(
         new Card({
@@ -56,7 +54,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest(
             agent.context.set(reportIdContext);
             console.log("POSTREPORTRES: ", res);
             agent.add(
-              `Okay, du hast also ein ${res.data.type} Problem in ${
+              `Okay, du hast also ein ${res.data.type} Problem im ${
                 res.data.location
               }. Möchtest du noch eine Beschreibung zu deiner Anfrage hinzufügen?`
             );
