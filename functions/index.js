@@ -122,6 +122,12 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest(
               text: desc
             })
           );
+        })
+        .catch(function(err) {
+          console.log("get Report err: ", err);
+          agent.add(
+            `Ups, da ist etwas schiefgelaufen. Kannst du es bitte nocheinmal versuchen?`
+          );
         });
     }
 
