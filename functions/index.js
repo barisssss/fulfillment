@@ -28,7 +28,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest(
           title: "Willkommen bei cunio!",
           text: "Dein persönlicher Mietassistent",
           imageUrl:
-            "https://firebasestorage.googleapis.com/v0/b/cunio-7411b.appspot.com/o/Telephone_cunio%402x.png?alt=media&token=a75d62d8-cebf-4865-9dcd-51424cccca22"
+            "https://firebasestorage.googleapis.com/v0/b/cunio-7411b.appspot.com/o/Group%202%20(2).png?alt=media&token=ce927630-e04f-411c-b7e2-9ad093ab405d"
         })
       );
 
